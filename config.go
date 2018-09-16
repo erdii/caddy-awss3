@@ -2,7 +2,6 @@ package awss3
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -99,7 +98,6 @@ func ParseConfigs(c *caddy.Controller) ([]*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("configs:\n%+v\n", conf)
 	}
 
 	return configs, nil

@@ -1,13 +1,11 @@
 package awss3
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 )
 
@@ -34,61 +32,50 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 		return 501, nil
 	}
 
-	result, err := c.S3Client.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String(c.Bucket),
-		Key:    aws.String(path),
+	// make an upfront request to s3, so we can find out header data about the requested object
+	result, err := c.S3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: &c.Bucket,
+		Key:    &path,
 	})
 	if err != nil {
 		// send status 404 if aws has no such object
 		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == s3.ErrCodeNoSuchKey {
+			if aerr.Code() == "NotFound" {
 				return 404, nil
 			}
 		}
 		return 0, err
 	}
 
-	fmt.Printf("result:\n%+v\n", result)
-
-	contentType := *result.ContentType
-
 	// send 404 for now if the requested object is a folder
-	if contentType == "application/x-directory" {
+	if *result.ContentType == "application/x-directory" {
 		return 404, nil
 	}
 
-	// set received content type
-	w.Header().Set("content-type", contentType)
+	// set response headers
+	w.Header().Set("content-type", *result.ContentType)
+	w.Header().Set("ETag", *result.ETag)
+	w.Header().Set("Last-Modified", (*result.LastModified).UTC().Format(http.TimeFormat))
 
-	// send s3 response
-	_, err = io.Copy(w, result.Body)
+	// wrap our http response in a WriteAtWrapper, so we can expose a WriteAt(b []byte, pos int64) function to s3manager
+	wrappedWriter := NewWriteAtWrapper(&w)
+
+	downloader := s3manager.NewDownloaderWithClient(c.S3Client, func(d *s3manager.Downloader) {
+		// set downloader concurrency to 1, so the file gets downloaded sequentially
+		d.Concurrency = 1
+	})
+
+	// start download and write the response into wrappedWriter
+	_, err = downloader.Download(&wrappedWriter, &s3.GetObjectInput{
+		Bucket: &c.Bucket,
+		Key:    &path,
+	})
+
 	if err != nil {
 		return 0, err
 	}
 
 	return 200, nil
-
-	// status := 201
-
-	// w.WriteHeader(status)
-	// w.Header().Set("content-type", "application/json")
-
-	// bodyBytes, err := json.Marshal(Response{
-	// 	This:   "is a test",
-	// 	Bucket: h.Configs[0].Bucket,
-	// })
-
-	// if err != nil {
-	// 	return 0, err
-	// }
-
-	// _, err = w.Write(bodyBytes)
-
-	// if err != nil || status >= 400 {
-	// 	return 0, err
-	// }
-
-	// return status, nil
 }
 
 // match finds the best match for a proxy config based on r.
