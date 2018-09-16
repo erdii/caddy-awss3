@@ -57,16 +57,18 @@ func TestParseConfigs(t *testing.T) {
 		input    string
 		expected []*Config
 	}{
-		{"awss3 test-bucket", []*Config{&Config{
+		{"awss3 / test-bucket", []*Config{&Config{
+			Path:   "/",
 			Bucket: "test-bucket",
 		}}},
-		{`awss3 another-bucket {
+		{`awss3 /path another-bucket {
     aws_access my-access
     aws_secret my-secret
     aws_region eu-central-1
 }`,
 			[]*Config{
 				&Config{
+					Path:      "/path",
 					Bucket:    "another-bucket",
 					AwsAccess: "my-access",
 					AwsSecret: "my-secret",
@@ -74,18 +76,21 @@ func TestParseConfigs(t *testing.T) {
 				},
 			},
 		},
-		{`awss3 first-bucket {
+		{`awss3 /foo first-bucket {
     aws_region eu-west-1
 }
-awss3 second-bucket {
+awss3 /bar {
     aws_region us-east-1
+    bucket second-bucket
 }`,
 			[]*Config{
 				&Config{
+					Path:      "/foo",
 					Bucket:    "first-bucket",
 					AwsRegion: "eu-west-1",
 				},
 				&Config{
+					Path:      "/bar",
 					Bucket:    "second-bucket",
 					AwsRegion: "us-east-1",
 				},
@@ -97,9 +102,9 @@ awss3 second-bucket {
 		if err != nil {
 			t.Errorf("ParseConfigs return err: %v", err)
 		}
-		// for i := range actual {
-		// 	actual[i].invoker = nil
-		// }
+		for i := range actual {
+			actual[i].S3Client = nil
+		}
 		EqOrErr(test.expected, actual, i, t)
 	}
 }

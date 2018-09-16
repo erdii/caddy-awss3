@@ -67,7 +67,8 @@ func ParseConfigs(c *caddy.Controller) ([]*Config, error) {
 		last = ""
 		switch lastTmp {
 		case "awss3":
-			s := strings.Split(val, " ")
+			s := []string{val}
+			s = append(s, c.RemainingArgs()...)
 			switch len(s) {
 			case 1:
 				conf = &Config{
