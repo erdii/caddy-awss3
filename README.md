@@ -1,19 +1,14 @@
 # caddy-awss3
 
-Plan:
+### Plan:
 * proxy GET file requests to s3 bucket
 
-Maybe:
+### Maybe:
 * proxy PUT requests to s3 bucket
 * proxy DELETE requests to s3 bucket
 * proxy GET directory listing requests to s3 bucket
 
-Questions:
-* use aws-sdk for everything or just for request signing?
-
-
-IAM policy:
-
+### IAM policy:
 ```JSON
 {
     "Version": "2012-10-17",

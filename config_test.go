@@ -13,6 +13,7 @@ import (
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 )
 
+// Taken from coopernurse/caddy-awslambda
 func TestToAwsConfigStaticCreds(t *testing.T) {
 	c := &Config{
 		AwsAccess: "a-key",
@@ -25,6 +26,7 @@ func TestToAwsConfigStaticCreds(t *testing.T) {
 	}
 }
 
+// Taken from coopernurse/caddy-awslambda
 func TestToAwsConfigStaticRegion(t *testing.T) {
 	c := &Config{
 		AwsRegion: "us-west-2",
@@ -39,6 +41,7 @@ func TestToAwsConfigStaticRegion(t *testing.T) {
 	}
 }
 
+// Taken from coopernurse/caddy-awslambda
 func TestToAwsConfigDefaults(t *testing.T) {
 	c := &Config{}
 	expected := aws.NewConfig()
@@ -48,6 +51,7 @@ func TestToAwsConfigDefaults(t *testing.T) {
 	}
 }
 
+// Taken from coopernurse/caddy-awslambda
 func TestParseConfigs(t *testing.T) {
 	for i, test := range []struct {
 		input    string
@@ -100,6 +104,7 @@ awss3 second-bucket {
 	}
 }
 
+// Taken from coopernurse/caddy-awslambda
 func mustNewRequest(method, path string, body io.Reader) *http.Request {
 	req, err := http.NewRequest(method, path, body)
 	if err != nil {

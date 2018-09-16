@@ -79,6 +79,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 }
 
 // match finds the best match for a proxy config based on r.
+// Inspired by coopernurse/caddy-awslambda
 func (h Handler) match(r *http.Request) (*Config, string, error) {
 	var c *Config
 	var path string

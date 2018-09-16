@@ -30,6 +30,7 @@ type Config struct {
 // ToAwsConfig returns a new *aws.Config instance using the AWS related values on Config.
 // If AwsRegion is empty, the AWS_REGION env var is used.
 // If AwsAccess is empty, the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env vars are used.
+// Taken from coopernurse/caddy-awslambda
 func (c *Config) ToAwsConfig() *aws.Config {
 	awsConf := aws.NewConfig()
 	if c.AwsRegion != "" {
@@ -54,6 +55,7 @@ func (c *Config) initS3Client() error {
 }
 
 // ParseConfigs parses a Caddy awslambda config block into a Config struct.
+// Inspired by coopernurse/caddy-awslambda
 func ParseConfigs(c *caddy.Controller) ([]*Config, error) {
 	var configs []*Config
 	var conf *Config
@@ -104,6 +106,7 @@ func ParseConfigs(c *caddy.Controller) ([]*Config, error) {
 }
 
 // StripPathPrefix strips the basepath from a request path
+// Taken from coopernurse/caddy-awslambda
 func (c *Config) StripPathPrefix(reqPath string) string {
 	prefix := c.Path
 
