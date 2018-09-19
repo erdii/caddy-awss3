@@ -1,3 +1,8 @@
+/**
+ * Attribution:
+ * This file contains code taken from coopernurse/caddy-awslambda.
+ */
+
 package awss3
 
 import (
@@ -22,7 +27,12 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 		return h.Next.ServeHTTP(w, r)
 	}
 
-	c, path, err := h.match(r)
+	matched, c, path, err := h.match(r)
+
+	if !matched {
+		return 404, nil
+	}
+
 	if err != nil {
 		return 0, err
 	}
@@ -79,18 +89,13 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) 
 }
 
 // match finds the best match for a proxy config based on r.
-// Inspired by coopernurse/caddy-awslambda
-func (h Handler) match(r *http.Request) (*Config, string, error) {
-	var c *Config
-	var path string
-
+func (h Handler) match(r *http.Request) (bool, *Config, string, error) {
 	for _, conf := range h.Configs {
 		basePath := conf.Path
 		if httpserver.Path(r.URL.Path).Matches(basePath) {
-			c = conf
-			path = c.StripPathPrefix(r.URL.Path)
+			return true, conf, conf.StripPathPrefix(r.URL.Path), nil
 		}
 	}
 
-	return c, path, nil
+	return false, nil, "", nil
 }

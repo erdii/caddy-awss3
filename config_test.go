@@ -1,19 +1,19 @@
+/**
+ * Attribution:
+ * This file contains code taken from coopernurse/caddy-awslambda.
+ */
+
 package awss3
 
 import (
-	"context"
-	"io"
-	"net/http"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/mholt/caddy"
-	"github.com/mholt/caddy/caddyhttp/httpserver"
 )
 
-// Taken from coopernurse/caddy-awslambda
 func TestToAwsConfigStaticCreds(t *testing.T) {
 	c := &Config{
 		AwsAccess: "a-key",
@@ -26,7 +26,6 @@ func TestToAwsConfigStaticCreds(t *testing.T) {
 	}
 }
 
-// Taken from coopernurse/caddy-awslambda
 func TestToAwsConfigStaticRegion(t *testing.T) {
 	c := &Config{
 		AwsRegion: "us-west-2",
@@ -41,7 +40,6 @@ func TestToAwsConfigStaticRegion(t *testing.T) {
 	}
 }
 
-// Taken from coopernurse/caddy-awslambda
 func TestToAwsConfigDefaults(t *testing.T) {
 	c := &Config{}
 	expected := aws.NewConfig()
@@ -51,7 +49,6 @@ func TestToAwsConfigDefaults(t *testing.T) {
 	}
 }
 
-// Taken from coopernurse/caddy-awslambda
 func TestParseConfigs(t *testing.T) {
 	for i, test := range []struct {
 		input    string
@@ -109,14 +106,25 @@ awss3 /bar {
 	}
 }
 
-// Taken from coopernurse/caddy-awslambda
-func mustNewRequest(method, path string, body io.Reader) *http.Request {
-	req, err := http.NewRequest(method, path, body)
-	if err != nil {
-		panic(err)
+func TestStripPathPrefix(t *testing.T) {
+	c := Config{
+		Path:   "/files/",
+		Bucket: "test-bucket",
 	}
-	replacer := httpserver.NewReplacer(req, nil, "")
-	newContext := context.WithValue(req.Context(), httpserver.ReplacerCtxKey, replacer)
-	req = req.WithContext(newContext)
-	return req
+
+	for i, test := range []struct {
+		reqPath  string
+		expected string
+	}{
+		{"/files/foo", "/foo"},
+		{"/files/blahstuff/other/things", "/blahstuff/other/things"},
+		{"/files/foo", "/foo"},
+		{"/other/foo", "/other/foo"},
+		{"/other/bar", "/other/bar"},
+	} {
+		actual := c.StripPathPrefix(test.reqPath)
+		if actual != test.expected {
+			t.Errorf("Test %d failed:\nExpected: %s\n  Actual: %s", i, test.expected, actual)
+		}
+	}
 }

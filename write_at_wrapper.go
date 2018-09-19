@@ -7,7 +7,7 @@ type WriteAtWrapper struct {
 	w *http.ResponseWriter
 }
 
-// NewWriteAtWrapper creates a new WriteAtWrapper containing a pointer to an http.ResponseWriter
+// NewWriteAtWrapper creates a new WriteAtWrapper instance
 func NewWriteAtWrapper(w *http.ResponseWriter) WriteAtWrapper {
 	return WriteAtWrapper{
 		w: w,
@@ -15,7 +15,7 @@ func NewWriteAtWrapper(w *http.ResponseWriter) WriteAtWrapper {
 }
 
 // WriteAt exposes an interface to write into the "contained" http.ResponseWriter
-// NEVER EVER use WriteAt with non consecutive _pos values
-func (wAW *WriteAtWrapper) WriteAt(p []byte, _pos int64) (int, error) {
-	return (*(*wAW).w).Write(p)
+// NEVER EVER use WriteAt with non consecutive chunks
+func (wrp *WriteAtWrapper) WriteAt(p []byte, _pos int64) (int, error) {
+	return (*(*wrp).w).Write(p)
 }
